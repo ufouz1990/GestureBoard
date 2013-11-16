@@ -8,15 +8,21 @@ public class WordPredictor {
 	public static final double MAX_ERROR = 2;
 	public static final double SAME_LINE_ERROR = 0.1;
 	public static final double DIFF_LINE_ERROR = 0.2;
+	public static final double CLOSE_MISS_ERROR = 0.6;
 	public static final double MISS_ERROR = 1;
+	public static final double EXTRA_LETTER_ERROR = 0.3;
 	
 	public static void main(String[] args) {
 		KeyMap.init();
-		LinkedList<KeyPoint> p = new LinkedList<KeyPoint>();
-		p.add(new KeyPoint(2,2.3));
-		p.add(new KeyPoint(1,11.15));
-		p.add(new KeyPoint(2,10.3));
-		p.add(new KeyPoint(1,4.15));
+		LinkedList<Character> p = new LinkedList<Character>();
+		p.add('D');
+		p.add('I');
+		p.add('F');
+		p.add('R');
+		p.add('E');
+		p.add('N');
+		p.add('C');
+		p.add('E');
 		System.out.println(new WordPredictor().predict(p));
 	}
 	
@@ -42,18 +48,20 @@ public class WordPredictor {
 		}
 	}
 	
-	public LinkedList<String> predict(LinkedList<KeyPoint> swipePoints) {
+	public LinkedList<String> predict(LinkedList<Character> swipePoints) {
 		double[] costs = new double[dictionary.size()];
 		
 		StringBuilder base_word = new StringBuilder();
 		for (int i = 0;i < swipePoints.size();i++) {
-			base_word.append(KeyMap.POINT_TO_CHAR.get(swipePoints.get(i)));
+			base_word.append(swipePoints.get(i));
 		}
 		String word = base_word.toString();
 		
 		int i = 0;
-		for (String dict_word : dictionary)
+		for (String dict_word : dictionary) {
 			costs[i] = mistypes(word,dict_word);
+			i++;
+		}
 		
 		return mostLikelyWords(costs);
 	}
@@ -70,11 +78,17 @@ public class WordPredictor {
 		
 		// Set all to upper case and remove duplicate letters (no cost)
 		word1 = word1.toUpperCase().replaceAll("(.)\\1","$1");
-		word2 = word2.toUpperCase().replaceAll("(.)\\1","$1");
+		word2 = word2.toUpperCase().replaceAll("(.)\\1","$1").replaceAll("[^A-Z0-9]", "");
 		
+		int i = 0;
 		int j = 0;
-		for (int i = 0;i < word1.length();i++) {
+		int extraLetters = 0;
+		for (;i < word1.length();i++) {
 			char c1 = word1.charAt(i);
+			if (j == word2.length()) {
+				cost = Math.min(cost+1,MAX_ERROR);
+				break;
+			}
 			char c2 = word2.charAt(j);
 			
 			boolean prevExists = (i > 0);
@@ -87,29 +101,40 @@ public class WordPredictor {
 				return MAX_ERROR;
 			
 			// Characters are same, move along!
-			if (c1 == c2)
+			if (c1 == c2) {
+				j++;
 				continue;
+			}
 			
 			// Characters on same line, so move to next dict word letter
 			if (prevExists && between(prevChar,c2,c1)) {
 				cost += SAME_LINE_ERROR;
+				extraLetters++;
+				i--;
+				j++;
 				continue;
 			}
 			
 			// Character on path to next character, risky business
 			if (prevExists && onPath(prevChar,c2,c1)) {
 				cost += DIFF_LINE_ERROR;
+				extraLetters++;
+				i--;
+				j++;
 				continue;
 			}
 			
 			cost += MISS_ERROR;
+			j++;
 		}
 		
-		return 0;
+		if (word2.length()-word1.length()-extraLetters > 0)
+			cost = Math.min(cost+(word2.length()-word1.length()-extraLetters)*EXTRA_LETTER_ERROR,MAX_ERROR);
+		
+		return cost;
 	}
 	
 	private boolean sameLine(char c1,char c2) {
-		System.out.println(KeyMap.CHAR_TO_POINT.get(c2)+" : "+c2);
 		return (KeyMap.CHAR_TO_POINT.get(c1).row == KeyMap.CHAR_TO_POINT.get(c2).row);
 	}
 	
@@ -144,6 +169,57 @@ public class WordPredictor {
 		return (between_row && between_col);
 	}
 	
+	private boolean nextToEachOther(char c1,char c2) {
+		double c1_row = KeyMap.CHAR_TO_POINT.get(c1).row;
+		double c2_row = KeyMap.CHAR_TO_POINT.get(c2).row;
+		
+		double c1_col = KeyMap.CHAR_TO_POINT.get(c1).col;
+		double c2_col = KeyMap.CHAR_TO_POINT.get(c2).col;
+		
+		switch(c1) {
+			case '`':
+				return (c2 == '1' || c2 == '\t');
+			case '1':
+				return (c2 == '`' || c2 == '2' || c2 == '\t' || c2 == 'Q');
+			case '=':
+				return (c2 == '-' || c2 == '\b' || c2 == '[' || c2 == ']');
+			case '\b':
+				return (c2 == '=' || c2 == ']' || c2 == '\\');
+			case '\t':
+				return (c2 == '`' || c2 == '1' || c2 == 'Q' || c2 == '\f');
+			case ']':
+				return (c2 == '[' || c2 == '=' || c2 == '\b' || c2 == '\\' || c2 == '\'' || c2 == '\n');
+			case '\\':
+				return (c2 == '\b' || c2 == ']' || c2 == '\n');
+			case '\f':
+				return (c2 == '\t' || c2 == 'Q' || c2 == 'A' || c2 == '\r');
+			case '\r':
+				return (c2 == '\f' || c2 == 'A' || c2 == 'Z' || c2 == '/' || c2 == '\'' || c2 == '\n');
+			case '\n':
+				return (c2 == ']' || c2 == '\\' || c2 == '\'' || c2 == '\r');
+			case 'Q':
+				return (c2 == '\t' || c2 == '1' || c2 == '2' || c2 == 'W' || c2 == '\f' || c2 == 'A');
+			case 'A':
+				return (c2 == 'Q' || c2 == 'W' || c2 == '\f' || c2 == '\r' || c2 == 'Z' || c2 == 'S');
+			case 'Z':
+				return (c2 == '\r' || c2 == 'A' || c2 == 'S' || c2 == 'X' || c2 == ' ');
+			case 'X':
+				return (c2 == 'Z' || c2 == 'S' || c2 == 'D' || c2 == 'C' || c2 == ' ');
+			case 'B':
+				return (c2 == 'V' || c2 == 'G' || c2 == 'H' || c2 == 'N' || c2 == ' ');
+			case 'N':
+				return (c2 == 'B' || c2 == 'H' || c2 == 'J' || c2 == 'M' || c2 == ' ' || c2 == '\0');
+			case 'M':
+				return (c2 == 'N' || c2 == 'J' || c2 == 'K' || c2 == ',' || c2 == ' ' || c2 == '\0');
+			case '/':
+				return (c2 == '.' || c2 == ';' || c2 == '\'' || c2 == '\r' || c2 == '\0');
+			case '\'':
+				return (c2 == ';' || c2 == '/' || c2 == '\r' || c2 == '\n' || c2 == '[' || c2 == ']');
+			default:
+				return (Math.sqrt(Math.pow(c1_row-c2_row,2)+Math.pow(c1_col-c2_col,2)) < 1.7);
+		}
+	}
+	
 	private LinkedList<String> mostLikelyWords(double[] costs) {
 		LinkedList<String> words = new LinkedList<String>();
 		LinkedList<Double> minCosts = new LinkedList<Double>();
@@ -163,6 +239,7 @@ public class WordPredictor {
 					words.removeLast();
 					minCosts.add(j,costs[i]);
 					minCosts.removeLast();
+					break;
 				}
 			}
 		}
