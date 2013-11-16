@@ -1,15 +1,11 @@
-import java.util.HashMap;
 import java.awt.*;
+import java.util.*;
 
 public class ScreenMap{
-	public static final HashMap<Character, Rectangle> CHAR_TO_POINT = new HashMap<Character, ScreenPoint>();
+	public static final HashMap<Character, Rectangle> CHAR_TO_POINT = new HashMap<Character, Rectangle>();
 
-	static boolean inited = false; 
 
-	public static void init(){
-		if(inited)
-			return;
-		nited = true;
+	static{
 
 	CHAR_TO_POINT.put('`', new Rectangle(20,22,45,41));
 	CHAR_TO_POINT.put('1', new Rectangle(75,22,45,41)); 
@@ -67,3 +63,25 @@ public class ScreenMap{
 	CHAR_TO_POINT.put(' ', new Rectangle(129,226,320,41));
 	CHAR_TO_POINT.put('\0', new Rectangle(462,226,209,41));
 	}
+
+	//finds key in map that corrisponds to point. 
+	public static Character selectKey(Point2D point){
+		
+		Set keys = CHAR_TO_POINT.keySet();
+		Iterator itr = keys.iterator();
+		while(itr.hasNext()){
+			Object element = itr.next();
+			Rectangle value = CHAR_TO_POINT.get(element);
+			if(value.contains(point.x, point.y)){
+				return (Character)element; 
+			}
+		}
+		return null;
+	}
+
+	// public static void main(String[] args){
+	// 	Point2D point = new Point2D(630, 200);
+	// 	System.out.println(selectKey(point));
+	// }
+
+}
