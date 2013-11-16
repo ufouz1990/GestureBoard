@@ -170,7 +170,10 @@ public class KeyMap {
 		POINT_TO_CHAR.put(new KeyPoint(3, 13.25),'\r');
 		CHAR_TO_POINT.put('\r', new KeyPoint(3, 13.25));
 
-		POINT_TO_CHAR.put(new KeyPoint(4, 6.8),' ');
-		CHAR_TO_POINT.put(' ', new KeyPoint(4, 6.8));
+		POINT_TO_CHAR.put(new KeyPoint(4, 5),' ');
+		CHAR_TO_POINT.put(' ', new KeyPoint(4, 5));
+
+		POINT_TO_CHAR.put(new KeyPoint(4, 10),'\0');
+		CHAR_TO_POINT.put('\0', new KeyPoint(4, 10));
 	}
 }
