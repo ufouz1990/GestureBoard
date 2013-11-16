@@ -103,7 +103,7 @@ class DataListener extends Listener{
     		VectorPacket vectorPacket;
     		Vector location = frame.finger(currentFingerID).stabilizedTipPosition();
     		Vector velocity = frame.finger(currentFingerID).tipVelocity();
-    		vectorPacket = new VectorPacket(location, velocity);
+    		vectorPacket = new VectorPacket(new Point3D(location.getX(),location.getY(),location.getZ()), velocity);
     		LeapDataPipeline.pipeline.addVectorPkt(vectorPacket);
     		
     	}

@@ -34,7 +34,7 @@ public class Calibration
 		double littlex = qRect.x+(qRect.width/2)+rx*(point.x-q.x);
 		double littley = qRect.y+(qRect.width/2)-ry*(point.y-q.y);
 		//System.out.println("2D points: ("+littlex+", "+littley+")" );
-		return new Point(littlex, littley);
+		return new Point((int)Math.round(littlex),(int)Math.round(littley));
 
 	}
 

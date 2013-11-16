@@ -52,27 +52,31 @@ import com.leapmotion.leap.Vector;
 
 	private void loop() {
 		Calibration calibration = new Calibration();
-		boolean pressing = false;
+		boolean pressed = false;
 		LinkedList<Point3D> points = new LinkedList<Point3D>();
 		Vector lastDirection = new Vector();
 
 		while (true) {
-			VectorPackage vector = LeapDataPipeline.pipeline.getVectorPkt();
+			VectorPacket vector = LeapDataPipeline.pipeline.getVectorPkt();
+			
+			if (vector != null) {
+			
+			System.out.println("Hi!");
 
-			if (!pressing && vector.getLocation().z < -1) {
-				pressing = true;
+			if (!pressed && vector.getLocation().z < -1) {
+				pressed = true;
 				points.add(vector.getLocation());
 			} else
-			if (pressing && vector.getLocation().z >= -1) {
-				pressing = false;
+			if (pressed && vector.getLocation().z >= -1) {
+				pressed = false;
 				points.add(vector.getLocation());
 			}
 
 			if (pressed) {
-				Vector direction = vector.normalized();
-				boolean xChange = Math.abs(direction.getX()-lastDirection.getX());
-				boolean yChange = Math.abs(direction.getY()-lastDirection.getY());
-				boolean zChange = Math.abs(direction.getZ()-lastDirection.getZ());
+				Vector direction = vector.getVelocity().normalized();
+				double xChange = Math.abs(direction.getX()-lastDirection.getX());
+				double yChange = Math.abs(direction.getY()-lastDirection.getY());
+				double zChange = Math.abs(direction.getZ()-lastDirection.getZ());
 				lastDirection = direction;
 
 				double directionThreshold = 0.2;
@@ -80,7 +84,7 @@ import com.leapmotion.leap.Vector;
 				if (xChange > directionThreshold || yChange > directionThreshold || zChange > directionThreshold) {
 					points.add(vector.getLocation());
 				} else
-				if (vector.magnitude() < velocityThreshold) {
+				if (vector.getVelocity().magnitude() < velocityThreshold) {
 					points.add(vector.getLocation());
 				}
 			} else
@@ -98,6 +102,8 @@ import com.leapmotion.leap.Vector;
 
 				}
 				points.clear();
+			}
+			
 			}
 
 			try {

@@ -1,15 +1,15 @@
 import com.leapmotion.leap.Vector;
 
 public class VectorPacket {
-	private Vector location;
+	private Point3D location;
 	private Vector velocity;
 	
-	public VectorPacket(Vector location,Vector velocity) {
+	public VectorPacket(Point3D location,Vector velocity) {
 		this.location = location;
 		this.velocity = velocity;
 	}
 	
-	public Vector getLocation() {
+	public Point3D getLocation() {
 		return location;
 	}
 	
