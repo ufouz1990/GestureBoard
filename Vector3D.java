@@ -1,15 +1,15 @@
-import com.leapmotion.Vector;
+import com.leapmotion.leap.Vector;
 
 public class Vector3D {
-	private Point3D location;
+	private Vector location;
 	private Vector velocity;
 	
-	public Vector3D(Point3D location,Vector velocity) {
+	public Vector3D(Vector location,Vector velocity) {
 		this.location = location;
 		this.velocity = velocity;
 	}
 	
-	public Point3D getLocation() {
+	public Vector getLocation() {
 		return location;
 	}
 	
