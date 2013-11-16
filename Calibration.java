@@ -8,6 +8,11 @@ public class Calibration
 
 	private static final double DISTANCE_X = 359;
 	private static final double DISTANCE_Y = 102;
+	
+	public Calibration() {
+		q = new Point3D();
+		m = new Point3D();
+	}
 
 	public void calPoints(Point3D[] points){
 		q = points[0];
