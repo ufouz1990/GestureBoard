@@ -26,6 +26,9 @@ public class FingerPainter extends JFrame {
 	private static int width = 900;
 	private static int height = 900;
 
+	
+	double oldX, oldY;
+
 	/**
 	 * Launch the application.
 	 */
@@ -68,12 +71,6 @@ public class FingerPainter extends JFrame {
 		}};
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
-		GridBagLayout gbl_contentPane = new GridBagLayout();
-		gbl_contentPane.columnWidths = new int[]{0};
-		gbl_contentPane.rowHeights = new int[]{0};
-		gbl_contentPane.columnWeights = new double[]{Double.MIN_VALUE};
-		gbl_contentPane.rowWeights = new double[]{Double.MIN_VALUE};
-		contentPane.setLayout(gbl_contentPane);
 	}
 	
 	
@@ -84,8 +81,10 @@ public class FingerPainter extends JFrame {
 		
 		int radius = Math.min((int)(2500/listener.velocity), 50);
 		
-		g.fillOval(width/2 + (int)listener.x - radius, height - (int)listener.y - radius,radius*2,radius*2);
-		
+		//g.fillOval(width/2 + (int)listener.x - radius, height - (int)listener.y - radius,radius*2,radius*2);
+		g.drawLine(width/2 + (int)oldX, height - (int)oldY, width/2 + (int)listener.x, height - (int)listener.y);
+		oldX = listener.x;
+		oldY = listener.y;
 	}
 
 }
@@ -135,7 +134,8 @@ class FingerListener extends Listener{
         if(!frame.hands().isEmpty()){
         	Finger finger = frame.fingers().frontmost();
         	
-        	Vector position = finger.tipPosition();
+        	Vector position = finger.stabilizedTipPosition();
+   
         	x = position.getX();
         	y = position.getY();
         	
