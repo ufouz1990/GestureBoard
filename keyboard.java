@@ -4,7 +4,7 @@ import java.awt.event.*;
 import java.util.*;
 	
 	class keyboard extends JFrame{
-	  ImageIcon image = new ImageIcon("keyboardImage.jpeg"); //the image
+	  ImageIcon image = new ImageIcon("keyboardImage.jpg"); //the image
 	  public keyboard(LinkedList wordList) {
 		setTitle("Keyboard");
 		setSize(850,400); // default size is 0,0
