@@ -24,6 +24,7 @@ class SampleListener extends Listener {
         controller.enableGesture(Gesture.Type.TYPE_KEY_TAP);
     }
 
+    
     public void onDisconnect(Controller controller) {
         //Note: not dispatched when running in a debugger.
         System.out.println("Disconnected");
