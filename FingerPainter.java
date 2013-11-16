@@ -12,6 +12,7 @@ import com.leapmotion.leap.Frame;
 import com.leapmotion.leap.Gesture;
 import com.leapmotion.leap.Listener;
 import com.leapmotion.leap.Pointable;
+import com.leapmotion.leap.SwipeGesture;
 import com.leapmotion.leap.Vector;
 
 import java.awt.GridBagLayout;
@@ -27,7 +28,8 @@ public class FingerPainter extends JFrame {
 	private static int height = 900;
 
 	
-	double oldX, oldY;
+	
+	//double endX, endY;
 
 	/**
 	 * Launch the application.
@@ -75,26 +77,32 @@ public class FingerPainter extends JFrame {
 	
 	
 	private void fingerPaint(Graphics g){
-		System.out.println(listener.x+" "+listener.y+" "+listener.velocity);
+		//System.out.println(listener.x+" "+listener.y+" "+listener.velocity);
 		
 		
-		
-		int radius = Math.min((int)(2500/listener.velocity), 50);
-		
-		//g.fillOval(width/2 + (int)listener.x - radius, height - (int)listener.y - radius,radius*2,radius*2);
-		g.drawLine(width/2 + (int)oldX, height - (int)oldY, width/2 + (int)listener.x, height - (int)listener.y);
-		oldX = listener.x;
-		oldY = listener.y;
+		if(listener.readyToPaint){
+			int radius = Math.min((int)(2500/listener.velocity), 50);
+			
+			//g.fillOval(width/2 + (int)listener.x - radius, height - (int)listener.y - radius,radius*2,radius*2);
+			g.drawLine(width/2 + (int)listener.endX, height - (int)listener.endY, width/2 + (int)listener.startX, height - (int)listener.startY);
+			//endX = listener.startX;
+			//endY = listener.starty;
+			
+			listener.readyToPaint = false;
+		}
 	}
 
 }
 
 class FingerListener extends Listener{
 	
-	public double x;
-	public double y;
+	public double startX;
+	public double startY;
+	public double endX;
+	public double endY;
 	public double velocity;
-	
+	public boolean gesturing;
+	boolean readyToPaint = false;
 	
 	public void onInit(Controller controller) {
         System.out.println("Initialized");
@@ -103,9 +111,9 @@ class FingerListener extends Listener{
     public void onConnect(Controller controller) {
         System.out.println("Connected");
         controller.enableGesture(Gesture.Type.TYPE_SWIPE);
-        controller.enableGesture(Gesture.Type.TYPE_CIRCLE);
-        controller.enableGesture(Gesture.Type.TYPE_SCREEN_TAP);
-        controller.enableGesture(Gesture.Type.TYPE_KEY_TAP);
+        //controller.enableGesture(Gesture.Type.TYPE_CIRCLE);
+        //controller.enableGesture(Gesture.Type.TYPE_SCREEN_TAP);
+        //controller.enableGesture(Gesture.Type.TYPE_KEY_TAP);
         
   
         
@@ -124,23 +132,44 @@ class FingerListener extends Listener{
     public void onFrame(Controller controller) {
     	
         Frame frame = controller.frame();
-        System.out.println("Frame id: " + frame.id()
+        /*System.out.println("Frame id: " + frame.id()
                          + ", timestamp: " + frame.timestamp()
                          + ", hands: " + frame.hands().count()
                          + ", fingers: " + frame.fingers().count()
                          + ", tools: " + frame.tools().count()
                          + ", gestures " + frame.gestures().count());
-        
-        if(!frame.hands().isEmpty()){
-        	Finger finger = frame.fingers().frontmost();
+        */
+        if(!frame.gestures().isEmpty()){
+        	if(frame.gestures().count() > 1) System.out.println("more than one gesture!");
+        	Gesture swipe = frame.gestures().get(0);
         	
-        	Vector position = finger.stabilizedTipPosition();
+        	  //System.out.println("Swipe id: " + swipe.id()
+                //      + ", " + swipe.state()
+                     // + ", position: " + swipe.position()
+                  //    + ", direction: " + swipe.direction()
+                    //  + ", speed: " + swipe.speed());
+        	
+        	
+        	if(swipe.state().equals(Gesture.State.STATE_START)){
+        		Vector position = swipe.hands().frontmost().fingers().frontmost().stabilizedTipPosition();
+        		startX = position.getX();
+        		startY = position.getY();
+        	}else if(swipe.state().equals(Gesture.State.STATE_STOP)){
+        		Vector position = swipe.hands().frontmost().fingers().frontmost().stabilizedTipPosition();
+        		endX = position.getX();
+        		endY = position.getY();
+        		readyToPaint = true;
+        	}
+        	
+        	//Finger finger = frame.fingers().frontmost();
+        	
+        	//Vector position = finger.stabilizedTipPosition();
    
-        	x = position.getX();
-        	y = position.getY();
+        	//startX = position.getX();
+        	//starty = position.getY();
         	
-        	Vector veloc = finger.tipVelocity();
-        	velocity = veloc.magnitude();
+        	//Vector veloc = finger.tipVelocity();
+        	//velocity = veloc.magnitude();
         	
         	
         }
