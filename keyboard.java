@@ -55,19 +55,55 @@ import com.leapmotion.leap.Vector;
 		boolean pressed = false;
 		LinkedList<Point3D> points = new LinkedList<Point3D>();
 		Vector lastDirection = new Vector();
+		
+		LinkedList<Character> letters = new LinkedList<Character>();
+		
+		// Z threashold
+		double zThresh = -1;
+		
+		// Calibration loop
+		Point3D[] cal_points = new Point3D[2];
+		cal_points[0] = cal_points[1] = null;
+		while (true) {
+			VectorPacket vector = LeapDataPipeline.pipeline.getVectorPkt();
+			
+			if (vector != null) {
+			
+			if (!pressed && vector.getLocation().z < zThresh)
+				if (cal_points[0] == null) {
+					cal_points[0] = vector.getLocation();
+					System.out.println(cal_points[0]);
+				}
+				else {
+					cal_points[1] = vector.getLocation();
+					System.out.println(cal_points[1]);
+				}
+			if (vector.getLocation().z < zThresh)
+				pressed = true;
+			else
+				pressed = false;
+			
+			}
+			
+			if (cal_points[1] != null)
+				break;
+			
+			try {
+				Thread.currentThread().sleep(50);
+			}
+			catch(InterruptedException ie) {}
+		}
 
 		while (true) {
 			VectorPacket vector = LeapDataPipeline.pipeline.getVectorPkt();
 			
 			if (vector != null) {
 			
-			System.out.println("Hi!");
-
-			if (!pressed && vector.getLocation().z < -1) {
+			if (!pressed && vector.getLocation().z < zThresh) {
 				pressed = true;
 				points.add(vector.getLocation());
 			} else
-			if (pressed && vector.getLocation().z >= -1) {
+			if (pressed && vector.getLocation().z >= zThresh) {
 				pressed = false;
 				points.add(vector.getLocation());
 			}
@@ -96,7 +132,10 @@ import com.leapmotion.leap.Vector;
 						screenPoints.add(screenPnt);
 				}
 				if (points.size() == 1) {
-					
+					letters.add(ScreenMap.selectKey(new Point2D(points.get(0).x,points.get(0).y)));
+					String cur = boxes[0].getWord()+letters.getLast();
+					boxes[0].setWord(cur);
+					boxes[0].repaint();
 				}
 				else {
 
