@@ -7,13 +7,16 @@ import java.util.*;
 	  ImageIcon image = new ImageIcon("keyboardImage.jpg"); //the image
 	  public keyboard(LinkedList wordList) {
 		setTitle("Keyboard");
-		setSize(850,400); // default size is 0,0
+		setSize(840,335); // default size is 0,0
 		setResizable(false); //so the user does not resize the window
 		setLocation(10,200); // default is 0,0 (top left corner)
 		setVisible(true);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-		Container pane = getContentPane(); //sets up container
+		Container mainPane = getContentPane();
+		mainPane.setLayout(new BorderLayout());
+
+		Container pane = new JPanel(); //sets up container
 		pane.setLayout(new GridBagLayout()); //sets up layout
 		GridBagConstraints c = new GridBagConstraints();
 
@@ -30,12 +33,18 @@ import java.util.*;
 		rec.repaint();
 		}
 		//sets up image 
-		JLabel label = new JLabel(image);
+		/*KeyboardApplet label = new KeyboardApplet();
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 0;
 		c.gridy = 2;
 		c.gridwidth = 5;
-		pane.add(label, c);
+		c.ipady = 300;
+		pane.add(label, c);*/
+
+		mainPane.add("North",pane);
+		KeyboardApplet keyboard = new KeyboardApplet();
+		keyboard.repaint();
+		mainPane.add("Center",keyboard);
 
 	}
 }
