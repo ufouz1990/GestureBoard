@@ -11,7 +11,9 @@ public class KeyMap {
 			return;
 		inited = true;
 		
-		POINT_TO_CHAR.put(0,'`');
+		POINT_TO_CHAR.put(new KeyPoint(0,0.5),'`');
 		CHAR_TO_POINT.put('`',);
+		
+		POINT_TO_CHAR.
 	}
 }
