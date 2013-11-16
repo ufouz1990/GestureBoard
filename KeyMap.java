@@ -13,3 +13,5 @@ public class KeyMap {
 		
 		POINT_TO_CHAR.put(0,'`');
 		CHAR_TO_POINT.put('`',);
+	}
+}
