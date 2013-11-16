@@ -4,10 +4,13 @@ import java.util.*;
 
 public class WordPredictor {
 	private ArrayList<String> dictionary;
+	private ArrayList<String> mostFrequentWords;
 	
 	public static final double MAX_ERROR = 2;
 	public static final double SAME_LINE_ERROR = 0.1;
 	public static final double DIFF_LINE_ERROR = 0.2;
+	public static final double DELETION_NEAR_ERROR = 0.15;
+	public static final double DELETION_FAR_ERROR = 0.7;
 	public static final double CLOSE_MISS_ERROR = 0.6;
 	public static final double MISS_ERROR = 1;
 	public static final double EXTRA_LETTER_ERROR = 0.3;
@@ -15,19 +18,15 @@ public class WordPredictor {
 	public static void main(String[] args) {
 		KeyMap.init();
 		LinkedList<Character> p = new LinkedList<Character>();
-		p.add('D');
-		p.add('I');
-		p.add('F');
-		p.add('R');
-		p.add('E');
-		p.add('N');
-		p.add('C');
+		p.add('W');
+		p.add('O');
 		p.add('E');
 		System.out.println(new WordPredictor().predict(p));
 	}
 	
 	public WordPredictor() {
 		loadDictionary();
+		loadMostFrequentWords();
 	}
 	
 	private void loadDictionary() {
@@ -40,6 +39,24 @@ public class WordPredictor {
 				if (line == null)
 					break;
 				dictionary.add(line);
+			}
+			reader.close();
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void loadMostFrequentWords() {
+		mostFrequentWords = new ArrayList<String>();
+		 
+		try {   
+			BufferedReader reader = new BufferedReader(new FileReader("mostFreqWords.txt"));
+			while (true) { 
+				String line = reader.readLine();
+				if (line == null)
+					break;
+				mostFrequentWords.add(line);
 			}
 			reader.close();
 		}
@@ -80,6 +97,9 @@ public class WordPredictor {
 		word1 = word1.toUpperCase().replaceAll("(.)\\1","$1");
 		word2 = word2.toUpperCase().replaceAll("(.)\\1","$1").replaceAll("[^A-Z0-9]", "");
 		
+		// Check for single deletion
+		double singleDeletion = singleDeletion(word1,word2);
+		
 		int i = 0;
 		int j = 0;
 		int extraLetters = 0;
@@ -98,7 +118,8 @@ public class WordPredictor {
 			
 			// If mistype >= MAX_ERROR, not the word, so exit!
 			if (cost >= MAX_ERROR)
-				return MAX_ERROR;
+				//return MAX_ERROR;
+				break;
 			
 			// Characters are same, move along!
 			if (c1 == c2) {
@@ -124,12 +145,18 @@ public class WordPredictor {
 				continue;
 			}
 			
-			cost += MISS_ERROR;
+			cost += (nextToEachOther(c1,c2))? CLOSE_MISS_ERROR : MISS_ERROR;
 			j++;
 		}
 		
 		if (word2.length()-word1.length()-extraLetters > 0)
 			cost = Math.min(cost+(word2.length()-word1.length()-extraLetters)*EXTRA_LETTER_ERROR,MAX_ERROR);
+		
+		if (word1.length()-word2.length() > 3)
+			cost = MAX_ERROR;
+		
+		if (singleDeletion > 0)
+			cost = Math.min(singleDeletion,cost);
 		
 		return cost;
 	}
@@ -220,6 +247,36 @@ public class WordPredictor {
 		}
 	}
 	
+	private double singleDeletion(String word1,String word2) {
+		if (word2.length()-word1.length() != 1)
+			return 0;
+		
+		boolean foundDeletion = false;
+		char deletion = 'Q';
+		char opt1 = 'Q';
+		char opt2 = 'Q';
+		int j = 0;
+		for (int i = 0;i < word1.length();i++) {
+			if (word1.charAt(i) == word2.charAt(j)) {
+				j++;
+				continue;
+			}
+			if (foundDeletion) {
+				return 0;
+			}
+			else {
+				foundDeletion = true;
+				deletion = word2.charAt(j);
+				opt1 = word1.charAt(i);
+				opt2 = (i > 0)? word1.charAt(i-1) : opt1;
+				i--;
+			}
+			j++;
+		}
+		
+		return (nextToEachOther(deletion,opt1) || nextToEachOther(deletion,opt2))? DELETION_NEAR_ERROR : DELETION_FAR_ERROR;
+	}
+	
 	private LinkedList<String> mostLikelyWords(double[] costs) {
 		LinkedList<String> words = new LinkedList<String>();
 		LinkedList<Double> minCosts = new LinkedList<Double>();
@@ -244,9 +301,43 @@ public class WordPredictor {
 			}
 		}
 		
+		String[] oldTop5 = new String[5];
+		int topInTop = 0;
+		for (int i = 0;i < oldTop5.length;i++)
+			oldTop5[i] = words.get(i);
+		
+		String[] top5 = new String[oldTop5.length];
+		int count = 1;
+		for (count = 1;count < top5.length;count++)
+			if (costs[count] != costs[0])
+				break;
+		
+		int top5Index = 0;
+		for (int i = 0;i < mostFrequentWords.size();i++) {
+			for (int j = 0;j < count;j++) {
+				if (mostFrequentWords.get(i).equalsIgnoreCase(words.get(j))) {
+					top5[top5Index] = words.get(j);
+					top5Index++;
+					if (j <= i)
+						topInTop++;
+				}
+			}
+		}
+		for (int i = top5Index;i < count;i++) {
+			top5[i] = oldTop5[i-top5Index+topInTop];
+		}
+		for (int i = count;i < 5;i++)
+			top5[i] = words.get(i);
+		
 		LinkedList<String> wordsList = new LinkedList<String>();
 		
-		for (int i = 0;i < minCosts.size();i++) {
+		for (int i = 0;i < top5.length;i++) {
+			if (top5[i] == null)
+				break;
+			wordsList.add(top5[i]);
+		}
+		
+		for (int i = 5;i < minCosts.size();i++) {
 			if (minCosts.get(i) >= MAX_ERROR)
 				break;
 			wordsList.add(words.get(i));
