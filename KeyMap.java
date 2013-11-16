@@ -156,7 +156,7 @@ public class KeyMap {
 		CHAR_TO_POINT.put('N', new KeyPoint(3, 7.5));
 
 		POINT_TO_CHAR.put(new KeyPoint(3, 8.5),'M');
-		CHAR_TO_POINT.put('X', new KeyPoint(3, 8.5));
+		CHAR_TO_POINT.put('M', new KeyPoint(3, 8.5));
 
 		POINT_TO_CHAR.put(new KeyPoint(3, 9.5),',');
 		CHAR_TO_POINT.put(',', new KeyPoint(3, 9.5));
