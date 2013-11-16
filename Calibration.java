@@ -1,15 +1,22 @@
+import java.awt.*;
+
 public class Calibration
 {
-	Point3D q, p, z, m;
+	Point3D q, m;
 	double initialz = 0;
-	private static final double DISTANCE = 495;
+	double rx,ry;
+
+	private static final double DISTANCE_X = 359;
+	private static final double DISTANCE_Y = 102;
 
 	public void calPoints(Point3D[] points){
 		q = points[0];
-		p = points[1];
-		z = points[2];
-		m = points[3];
-		initialz = (q.z + p.z + z.z + m.z)/4.0;
+		m = points[1];
+		initialz = (q.z + m.z)/2.0;
+		double distX = m.x-q.x;
+		double distY = q.y-m.y;
+		rx = (DISTANCE_X/distX);
+		ry = (DISTANCE_Y/distY);
 	}
 
 	public double getInitialZ(){
@@ -21,13 +28,13 @@ public class Calibration
 		return p.z >= initialz + initialz*0.2;
 	}
 
-	public Point2D ratio(Point3D point){
-		double bigD = Math.sqrt(Math.pow(p.x - q.x, 2)+Math.pow(p.y - q.y, 2));
-		double r = (bigD/ DISTANCE);
-		double littlex = r*point.x;
-		double littley = r*point.y;
-		System.out.println("2D points: ("+littlex+", "+littley+")" );
-		return new Point2D(littlex, littley);
+	public Point getScreenCoords(Point3D point){
+		Rectangle qRect = ScreenMap.CHAR_TO_POINT.get('Q');
+		Rectangle mRect = ScreenMap.CHAR_TO_POINT.get('M');
+		double littlex = qRect.x+(qRect.width/2)+rx*(point.x-q.x);
+		double littley = qRect.y+(qRect.width/2)-ry*(point.y-q.y);
+		//System.out.println("2D points: ("+littlex+", "+littley+")" );
+		return new Point(littlex, littley);
 
 	}
 
