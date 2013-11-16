@@ -11,6 +11,10 @@ public class KeyPoint {
 		this.col = col;
 	}
 	
+	public boolean equals(KeyPoint point) {
+		return (row == point.row && col == point.col);
+	}
+	
 	public String toString() {
 		return "("+(Math.round(row*10)/10d)+", "+(Math.round(col*10)/10d)+")";
 	}
